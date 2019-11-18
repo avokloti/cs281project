@@ -9,7 +9,7 @@ various links/sources:
 starting point was
 https://dsp.stackexchange.com/questions/53125/write-a-440-hz-sine-wave-to-wav-file-using-python-and-scipy
 
-(note: in our FB chat, an older file I sent started out with a different set of links, but the frequency was a bit messed up there)
+(note: in our FB chat, an older file I sent started out with a different set of links, but the frequency was a bit messed up there; that file is now called deprecated_soundgenerator.py)
 """
 
 import random
@@ -30,9 +30,11 @@ def random_func(tval):
   return random.uniform(-1,1)
 
 def naive_sine_func(tval, freq=C4FREQ):
+  # a single tone
   return np.sin(freq * 2 * np.pi * tval)
 
 def sin_plus_rand(tval, freq=C4FREQ):
+  # a tone plus noise
   return np.sin(freq * 2 * np.pi * tval) +  random.uniform(-1,1)
 
 def func_to_file(func, filename, length=1., amplitude=1.):
@@ -61,7 +63,7 @@ def create_uniform_chirp_func(freqrange=[C4FREQ, C4FREQ], timerange=[0., 3.], co
     for chirpdict in chirpdictlist:
       if tval >= chirpdict["chirpstart"] and tval <= chirpdict["chirpend"]:
         return naive_sine_func(tval, freq=chirpdict["freq"])
-    # return a 0 if nothing else panned out
+    # return a 0 if nothing else panned out, i.e. it's a chirp or nothing
     return 0.
   return tempfunc
 
@@ -96,7 +98,11 @@ def quick_asserts():
 
 
 def main():
-  produce_samples_v1(freqrange=[10000,15000],fileprefix="samplesv1_", numsamples=5) # this was an arbitrary range that might sound like bird chirps, feel free to tinker
+  # func_to_file will convert a function into a sound, saving it as a .wav file
+  #func_to_file(func=naive_sine_func, filename="singleCtone.wav")
+  print("Feel free to change the parameters, or ask Tyler if you're confused about how to construct a certain data set")
+  # change the numsamples parameter to change the number of triples of .wav files that are saved
+  produce_samples_v1(freqrange=[10000,15000],fileprefix="samplesv1_", numsamples=1) # this was an arbitrary frequency range that might sound like bird chirps, feel free to tinker
 
 if __name__ == "__main__":
   main()
