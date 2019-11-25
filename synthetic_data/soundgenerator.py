@@ -16,7 +16,8 @@ import random
 import numpy as np
 from scipy.io import wavfile
 
-SAMPLERATE = 100000 # this was originall set to 44100; maybe tweaking this will get better results with higher frequency? It's a performance tradeoff
+#SAMPLERATE = 100000 # this was originall set to 44100; maybe tweaking this will get better results with higher frequency? It's a performance tradeoff
+SAMPLERATE = 44100 # this is the standard
 C4FREQ = 261.63 # 261.63 Frequency should be C4 on the Piano
 
 def normalize_data(data):
