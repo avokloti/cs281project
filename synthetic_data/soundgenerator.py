@@ -1,6 +1,6 @@
 # Tyler Piazza
 # Python 3
-# 11/17/19
+# 11/30/19
 # goal is to artificially generate sound waves that sound like birds, using Python
 
 """
@@ -103,7 +103,7 @@ def main():
   #func_to_file(func=naive_sine_func, filename="singleCtone.wav")
   print("Feel free to change the parameters, or ask Tyler if you're confused about how to construct a certain data set")
   # change the numsamples parameter to change the number of triples of .wav files that are saved
-  produce_samples_v1(freqrange=[10000,15000],fileprefix="samplesv1_", numsamples=1) # this was an arbitrary frequency range that might sound like bird chirps, feel free to tinker
+  produce_samples_v1(freqrange=[10000,15000],fileprefix="samplesv1_", numsamples=1, length=5, timerange=[0., 5.], countrange=[8,12], noiselevel=0.6, amplitude=2.5) # this was an arbitrary frequency range that might sound like bird chirps, feel free to tinker
 
 if __name__ == "__main__":
   main()
