@@ -1,6 +1,6 @@
 # Tyler Piazza
 # Python 3
-# 11/30/19
+# 12/1/19
 # goal is to artificially generate sound waves that sound like birds, using Python
 
 """
@@ -15,6 +15,7 @@ https://dsp.stackexchange.com/questions/53125/write-a-440-hz-sine-wave-to-wav-fi
 import random
 import numpy as np
 from scipy.io import wavfile
+from scipy.signal import chirp, spectrogram
 
 #SAMPLERATE = 100000 # this was originall set to 44100; maybe tweaking this will get better results with higher frequency? It's a performance tradeoff
 SAMPLERATE = 44100 # this is the standard
@@ -61,11 +62,12 @@ def create_uniform_chirp_func(freqrange=[C4FREQ, C4FREQ], timerange=[0., 3.], co
     chirpdictlist.append(tempdict)
 
   def tempfunc(tval):
+    tempval = 0.
     for chirpdict in chirpdictlist:
       if tval >= chirpdict["chirpstart"] and tval <= chirpdict["chirpend"]:
-        return naive_sine_func(tval, freq=chirpdict["freq"])
+        tempval += naive_sine_func(tval, freq=chirpdict["freq"])
     # return a 0 if nothing else panned out, i.e. it's a chirp or nothing
-    return 0.
+    return tempval
   return tempfunc
 
 def produce_samples_v1(freqrange=[C4FREQ, C4FREQ], timerange=[0., 3.],
@@ -97,13 +99,22 @@ def quick_asserts():
   assert((normalize_data(np.array([7.2, 7.2, 7.2, 7.2])) == np.array([0.0, 0.0, 0.0, 0.0])).all())
   print("All asserts passed successfully!")
 
+def single_advanced_chirp(filename):
+  # writes a chirp to filename
+  t = np.linspace(0, 0.2, int(SAMPLERATE * 0.2))
+  # method can be tinkered between 'linear', 'quadratic', 'logorithmic', and 'hyperbolic'
+  # see https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.chirp.html for details
+  # f0 and f1 are the range of frequencies that the single chirp will go through
+  w = chirp(t, f0=10000, f1=5000, t1=0.2, method='linear')
+  wavfile.write(filename, SAMPLERATE, w)
+
 
 def main():
   # func_to_file will convert a function into a sound, saving it as a .wav file
   #func_to_file(func=naive_sine_func, filename="singleCtone.wav")
   print("Feel free to change the parameters, or ask Tyler if you're confused about how to construct a certain data set")
   # change the numsamples parameter to change the number of triples of .wav files that are saved
-  produce_samples_v1(freqrange=[10000,15000],fileprefix="samplesv1_", numsamples=1, length=5, timerange=[0., 5.], countrange=[8,12], noiselevel=0.6, amplitude=2.5) # this was an arbitrary frequency range that might sound like bird chirps, feel free to tinker
-
+  #produce_samples_v1(freqrange=[10000,15000],fileprefix="samplesv1_", numsamples=1, length=5, timerange=[0., 5.], countrange=[8,12], noiselevel=0.6, amplitude=2.5) # this was an arbitrary frequency range that might sound like bird chirps, feel free to tinker
+  single_advanced_chirp("advanced_chirp1.wav")
 if __name__ == "__main__":
   main()
