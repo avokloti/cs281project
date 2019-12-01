@@ -62,6 +62,7 @@ def create_uniform_chirp_func(freqrange=[C4FREQ, C4FREQ], timerange=[0., 3.], co
     chirpdictlist.append(tempdict)
 
   def tempfunc(tval):
+    # note that the chirps add to eachother
     tempval = 0.
     for chirpdict in chirpdictlist:
       if tval >= chirpdict["chirpstart"] and tval <= chirpdict["chirpend"]:
@@ -80,7 +81,7 @@ def produce_samples_v1(freqrange=[C4FREQ, C4FREQ], timerange=[0., 3.],
   t = np.linspace(0, int(length), int(SAMPLERATE * length))
   for i in range(numsamples):
     chirp_func = create_uniform_chirp_func(freqrange=freqrange, timerange=timerange, countrange=countrange, lengthrange=lengthrange)
-    y_chirp = amplitude * (1. - noiselevel) * np.array([chirp_func(tval) for tval in t])
+    y_chirp = amplitude * (1. - noiselevel) * normalize_data(np.array([chirp_func(tval) for tval in t]))
     y_random = amplitude * noiselevel * np.array([random_func(tval) for tval in t])
     # the bird alone
     wavfile.write(fileprefix + "bird_alone_" + str(i) + ".wav", SAMPLERATE, y_chirp)
@@ -89,6 +90,59 @@ def produce_samples_v1(freqrange=[C4FREQ, C4FREQ], timerange=[0., 3.],
     # both combined
     wavfile.write(fileprefix + "bird_noise_mix_" + str(i) + ".wav", SAMPLERATE, y_chirp + y_random)
 
+def write_single_advanced_chirp(filename):
+  # writes a chirp to filename
+  t = np.linspace(0, 0.2, int(SAMPLERATE * 0.2))
+  # method can be tinkered between 'linear', 'quadratic', 'logorithmic', and 'hyperbolic'
+  # see https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.chirp.html for details
+  # f0 and f1 are the range of frequencies that the single chirp will go through
+  w = chirp(t, f0=10000, f1=5000, t1=0.2, method='linear')
+  wavfile.write(filename, SAMPLERATE, w)
+
+def create_advanced_chirp_array(freqrange=[C4FREQ, C4FREQ], timerange=[0., 3.], length=3, countrange=[3,5], lengthrange=[0.1, 0.2]):
+  # create an array that is a bunch of advanced chirps going off
+  # freqrange, timerange, length, countrange, lengthrange are all analagous to what they are in create_uniform_chirp_func
+  accumulator = np.zeros(int(length*SAMPLERATE))
+  chirpcount = random.randint(countrange[0], countrange[1])
+  # for now, the endfreqis from freqrange[0] to freqmidpoint, beginningfreq is in freqmidpoint to freqrange[1] (so frequency goes down)
+  freqmidpoint = int(float(freqrange[0] + freqrange[1]) / 2.)
+  assert(freqrange[0] <= freqmidpoint)
+  assert(freqrange[1] >= freqmidpoint)
+  for _ in range(chirpcount):
+    # sample the random features of each chirp
+    chirpstart = random.uniform(timerange[0], timerange[1])
+    chirplen = random.uniform(lengthrange[0], lengthrange[1])
+    endfreq = random.uniform(freqrange[0], freqmidpoint)
+    beginningfreq = random.uniform(freqmidpoint, freqrange[1])
+    # construct time and chirps
+    t = np.linspace(0, chirplen, int(SAMPLERATE * chirplen))
+    w = chirp(t, f0=beginningfreq, f1=endfreq, t1=chirplen, method='linear')
+    # the resize and roll just lets me set a new starttime for the chirp (so it doesn't start at the beginning)
+    w.resize(int(length*SAMPLERATE))
+    w = np.roll(w, int(chirpstart*SAMPLERATE))
+    accumulator = accumulator + w
+  # make sure it's in [-1,1] range
+  accumulator = normalize_data(accumulator)
+  return accumulator
+
+def produce_samples_v2(freqrange=[C4FREQ, C4FREQ],
+  countrange=[3,5], lengthrange=[0.1, 0.2], noiselevel=0.05, length=3., timerange=[0., 3.], amplitude=1., fileprefix="samplesv2/", numsamples=5):
+  # freqrange, timerange, countrange, and lengthrange are all from create_advanced_chirp_array, check that function for what these parameters do
+  # length and amplitude are hopefully self explanitory (time in seconds, and something proportional to amplitude)
+  # noiselevel is a number in [0.,1.], it represents how much to bias the noise when it comes to adding the sounds
+  # numsamples is how many samples, file_prefix is the prefix for the files that you save these with
+
+  t = np.linspace(0, int(length), int(SAMPLERATE * length))
+  for i in range(numsamples):
+    # use my create_advanced_chirp_array, which is already normalized
+    y_chirp = amplitude * (1. - noiselevel) * create_advanced_chirp_array(freqrange=freqrange, timerange=timerange, length=length, countrange=countrange, lengthrange=lengthrange)
+    y_random = amplitude * noiselevel * np.array([random_func(tval) for tval in t])
+    # the bird alone
+    wavfile.write(fileprefix + "bird_alone_" + str(i) + ".wav", SAMPLERATE, y_chirp)
+    # noise alone
+    wavfile.write(fileprefix + "noise_alone_" + str(i) + ".wav", SAMPLERATE, y_random)
+    # both combined
+    wavfile.write(fileprefix + "bird_noise_mix_" + str(i) + ".wav", SAMPLERATE, y_chirp + y_random)
 
 def quick_asserts():
   # just to check some basic logic, not super exhaustive
@@ -99,22 +153,13 @@ def quick_asserts():
   assert((normalize_data(np.array([7.2, 7.2, 7.2, 7.2])) == np.array([0.0, 0.0, 0.0, 0.0])).all())
   print("All asserts passed successfully!")
 
-def single_advanced_chirp(filename):
-  # writes a chirp to filename
-  t = np.linspace(0, 0.2, int(SAMPLERATE * 0.2))
-  # method can be tinkered between 'linear', 'quadratic', 'logorithmic', and 'hyperbolic'
-  # see https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.chirp.html for details
-  # f0 and f1 are the range of frequencies that the single chirp will go through
-  w = chirp(t, f0=10000, f1=5000, t1=0.2, method='linear')
-  wavfile.write(filename, SAMPLERATE, w)
-
-
 def main():
   # func_to_file will convert a function into a sound, saving it as a .wav file
   #func_to_file(func=naive_sine_func, filename="singleCtone.wav")
   print("Feel free to change the parameters, or ask Tyler if you're confused about how to construct a certain data set")
   # change the numsamples parameter to change the number of triples of .wav files that are saved
   #produce_samples_v1(freqrange=[10000,15000],fileprefix="samplesv1_", numsamples=1, length=5, timerange=[0., 5.], countrange=[8,12], noiselevel=0.6, amplitude=2.5) # this was an arbitrary frequency range that might sound like bird chirps, feel free to tinker
-  single_advanced_chirp("advanced_chirp1.wav")
+  #write_single_advanced_chirp("advanced_chirp1.wav")
+  produce_samples_v2(freqrange=[5000,10000],fileprefix="samplesv2_", numsamples=1, length=5, timerange=[0., 5.], countrange=[8,12], noiselevel=0.6, amplitude=2.5)
 if __name__ == "__main__":
   main()
