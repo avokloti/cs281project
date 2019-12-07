@@ -1,6 +1,5 @@
 # Tyler Piazza
 # Python 3
-# 12/1/19
 # goal is to artificially generate sound waves that sound like birds, using Python
 
 """
