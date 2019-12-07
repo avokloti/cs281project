@@ -181,31 +181,35 @@ def makeSpectrogram(s, framerate=SAMPLERATE):
 
     return [t, freqs, spec_abs]
 
-def showspectrogram(spec_abs, label="Sound"):
+def showspectrogram(amplists, label=""):
+  [birdvals, bgvals, sumvals] = amplists
   # show spectrogram
   plt.figure()
 
   plt.subplot(3, 1, 1)
-  plt.imshow(np.transpose(spec_abs[:, 0:100]), aspect='auto')
+  birdspectrogram = makeSpectrogram(birdvals)[2]
+  plt.imshow(np.transpose(birdspectrogram[:, 0:100]), aspect='auto')
   plt.gca().invert_yaxis()
   plt.xlabel('Time')
   plt.ylabel('Frequency')
-  plt.title('Spectrogram of ' + label)
-  """
+  plt.title('Spectrogram of Birds Alone')
+
   plt.subplot(3, 1, 2)
-  plt.imshow(np.transpose(specs_bg[:, 0:100]), aspect='auto')
+  backgroundspectrogram = makeSpectrogram(bgvals)[2]
+  plt.imshow(np.transpose(backgroundspectrogram[:, 0:100]), aspect='auto')
   plt.gca().invert_yaxis()
   plt.xlabel('Time')
   plt.ylabel('Frequency')
   plt.title('Spectrogram of Background (Noise)')
 
   plt.subplot(3, 1, 3)
-  plt.imshow(np.transpose(specs_mix[:, 0:100]), aspect='auto')
+  sumspectrogram = makeSpectrogram(sumvals)[2]
+  plt.imshow(np.transpose(sumspectrogram[:, 0:100]), aspect='auto')
   plt.gca().invert_yaxis()
   plt.xlabel('Time')
   plt.ylabel('Frequency')
   plt.title('Spectrogram of Mix (Sum)')
-  """
+
   plt.tight_layout()
   plt.show()
 
@@ -226,6 +230,6 @@ def main():
   #produce_samples_v1(freqrange=[10000,15000],fileprefix="samplesv1_", numsamples=1, length=5, timerange=[0., 5.], countrange=[8,12], noiselevel=0.6, amplitude=2.5) # this was an arbitrary frequency range that might sound like bird chirps, feel free to tinker
   #write_single_advanced_chirp("advanced_chirp1.wav")
   tripletlist = produce_samples_v2(freqrange=[5000,10000],fileprefix="samplesv2_", numsamples=1, length=5, timerange=[0., 5.], countrange=[8,12], noiselevel=0.6, amplitude=2.5)
-  showspectrogram(makeSpectrogram(tripletlist[0][0])[2])
+  showspectrogram(tripletlist[0])
 if __name__ == "__main__":
   main()
