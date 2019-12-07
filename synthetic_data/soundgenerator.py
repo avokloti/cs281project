@@ -132,6 +132,8 @@ def produce_samples_v2(freqrange=[C4FREQ, C4FREQ],
   # length and amplitude are hopefully self explanitory (time in seconds, and something proportional to amplitude)
   # noiselevel is a number in [0.,1.], it represents how much to bias the noise when it comes to adding the sounds
   # numsamples is how many samples, file_prefix is the prefix for the files that you save these with
+
+  # produce_samples_v2 now returns a list of these [y_chirp, y_random, y_chirp + y_random] values, so that you can make spectrograms (for instance)
   returnarray = []
   t = np.linspace(0, int(length), int(SAMPLERATE * length))
   for i in range(numsamples):
@@ -153,7 +155,7 @@ def makeSpectrogram(s, framerate=SAMPLERATE):
     """
     note: this code was originally from Irina's construct_dataset.py
     framerate should be samplingrate, which I have as SAMPLERATE
-    s should be
+    s should be like y_chirp or y_random from produce_samples_v2 (or just generally a list of amplitudes)
     """
 
     # create hanning window of size n
@@ -181,11 +183,14 @@ def makeSpectrogram(s, framerate=SAMPLERATE):
 
     return [t, freqs, spec_abs]
 
-def showspectrogram(amplists, label=""):
+def showspectrograms(amplists):
+  # take in a list of the 3 lists involved with generating bird sound alone, background sound, and their sum
+  # print out an image with 3 plots for the spectrogram, using the makeSpectrogram function with framerate=SAMPLERATE
   [birdvals, bgvals, sumvals] = amplists
   # show spectrogram
   plt.figure()
 
+  # for the bird alone
   plt.subplot(3, 1, 1)
   birdspectrogram = makeSpectrogram(birdvals)[2]
   plt.imshow(np.transpose(birdspectrogram[:, 0:100]), aspect='auto')
@@ -194,6 +199,7 @@ def showspectrogram(amplists, label=""):
   plt.ylabel('Frequency')
   plt.title('Spectrogram of Birds Alone')
 
+  # for the background alone
   plt.subplot(3, 1, 2)
   backgroundspectrogram = makeSpectrogram(bgvals)[2]
   plt.imshow(np.transpose(backgroundspectrogram[:, 0:100]), aspect='auto')
@@ -202,6 +208,7 @@ def showspectrogram(amplists, label=""):
   plt.ylabel('Frequency')
   plt.title('Spectrogram of Background (Noise)')
 
+  # for their sum
   plt.subplot(3, 1, 3)
   sumspectrogram = makeSpectrogram(sumvals)[2]
   plt.imshow(np.transpose(sumspectrogram[:, 0:100]), aspect='auto')
@@ -230,6 +237,9 @@ def main():
   #produce_samples_v1(freqrange=[10000,15000],fileprefix="samplesv1_", numsamples=1, length=5, timerange=[0., 5.], countrange=[8,12], noiselevel=0.6, amplitude=2.5) # this was an arbitrary frequency range that might sound like bird chirps, feel free to tinker
   #write_single_advanced_chirp("advanced_chirp1.wav")
   tripletlist = produce_samples_v2(freqrange=[5000,10000],fileprefix="samplesv2_", numsamples=1, length=5, timerange=[0., 5.], countrange=[8,12], noiselevel=0.6, amplitude=2.5)
-  showspectrogram(tripletlist[0])
+  # i.e. run makeSpectrogram on the first lone bird sound
+  spectogramoutout = makeSpectrogram(tripletlist[0][0])
+  # print out the spectrograms, which are freshly computed using makeSpectrogram (I graph the last part of the triplet spit out from makeSpectrogram)
+  showspectrograms(tripletlist[0])
 if __name__ == "__main__":
   main()
