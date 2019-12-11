@@ -18,7 +18,7 @@ from scipy.io import wavfile
 from scipy.signal import chirp, spectrogram
 from matplotlib import pyplot as plt
 
-#SAMPLERATE = 100000 # this was originall set to 44100; maybe tweaking this will get better results with higher frequency? It's a performance tradeoff
+#SAMPLERATE = 100000 # this was originally set to 44100; maybe tweaking this will get better results with higher frequency? It's a performance tradeoff
 SAMPLERATE = 44100 # this is the standard
 C4FREQ = 261.63 # 261.63 Frequency should be C4 on the Piano
 
