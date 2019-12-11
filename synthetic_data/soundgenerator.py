@@ -137,15 +137,17 @@ def produce_samples_v2(freqrange=[C4FREQ, C4FREQ],
   returnarray = []
   t = np.linspace(0, int(length), int(SAMPLERATE * length))
   for i in range(numsamples):
+    if i % 25 == 0:
+      print("Producing samples and saving sound waves, i = " + str(i))
     # use my create_advanced_chirp_array, which is already normalized
     y_chirp = amplitude * (1. - noiselevel) * create_advanced_chirp_array(freqrange=freqrange, timerange=timerange, length=length, countrange=countrange, lengthrange=lengthrange)
     y_random = amplitude * noiselevel * np.array([random_func(tval) for tval in t])
     # the bird alone
-    wavfile.write(fileprefix + "audio_fg/" + str(i) + ".wav", SAMPLERATE, y_chirp)
+    wavfile.write(fileprefix + "/audio_fg/" + str(i) + ".wav", SAMPLERATE, y_chirp)
     # noise alone
-    wavfile.write(fileprefix + "audio_bg/" + str(i) + ".wav", SAMPLERATE, y_random)
+    wavfile.write(fileprefix + "/audio_bg/" + str(i) + ".wav", SAMPLERATE, y_random)
     # both combined
-    wavfile.write(fileprefix + "audio_mix/" + str(i) + ".wav", SAMPLERATE, y_chirp + y_random)
+    wavfile.write(fileprefix + "/audio_mix/" + str(i) + ".wav", SAMPLERATE, y_chirp + y_random)
 
     returnarray.append([y_chirp, y_random, y_chirp + y_random])
   # also return an array of the triplets of values
@@ -230,15 +232,19 @@ def quick_asserts():
   assert((normalize_data(np.array([7.2, 7.2, 7.2, 7.2])) == np.array([0.0, 0.0, 0.0, 0.0])).all())
   print("All asserts passed successfully!")
 
-"""
-def save_spectrograms(numsamples, foldername="synthetic_data_v2_0"):
+
+def save_spectrograms(numsamples, foldername="testfolder1", dir="./"):
   # this code comes from Irina
-  dir = './'
-  tripletlist = produce_samples_v2(freqrange=[5000,10000],fileprefix="samplesv2_", numsamples=numsamples, length=5, timerange=[0., 5.], countrange=[8,12], noiselevel=0.6, amplitude=2.5)
+  foldername = dir + foldername
+  tripletlist = produce_samples_v2(freqrange=[5000,10000],fileprefix=foldername, numsamples=numsamples, length=5, timerange=[0., 5.], countrange=[8,12], noiselevel=0.6, amplitude=2.5)
 
   # for each subtrack...
   for i, triplet in enumerate(tripletlist):
       print('Writing subtrack and spectrograms to file: ' + str(i))
+
+      fg_track = triplet[0]
+      bg_track = triplet[1]
+      mix_track = triplet[2]
 
       # save wav files to files
       # TODO: just do this in your function
@@ -247,29 +253,29 @@ def save_spectrograms(numsamples, foldername="synthetic_data_v2_0"):
       #wavfile.write(dir + foldername + '/audio_mix/' + str(i) + '.wav', sampling_rate, all_total_subtracks[i])
 
       # create spectrograms
-      [t_fg, freqs_fg, specs_fg] = makeSpectrogram(all_bird_subtracks[i], sampling_rate)
-      [t_bg, freqs_bg, specs_bg] = makeSpectrogram(all_bg_subtracks[i], sampling_rate)
-      [t_mix, freqs_mix, specs_mix] = makeSpectrogram(all_total_subtracks[i], sampling_rate)
+      [t_fg, freqs_fg, specs_fg] = makeSpectrogram(triplet[0], SAMPLERATE)
+      [t_bg, freqs_bg, specs_bg] = makeSpectrogram(triplet[1], SAMPLERATE)
+      [t_mix, freqs_mix, specs_mix] = makeSpectrogram(triplet[2], SAMPLERATE)
 
       # save spectrograms
-      np.savetxt(dir + 'constructed_data/spec_fg/' + str(i) + '.csv', specs_fg[:, 0:100], fmt='%1.3e')
+      np.savetxt(foldername + '/spec_fg/' + str(i) + '.csv', specs_fg[:, 0:100], fmt='%1.3e')
       # check spectrogram
-      check = np.loadtxt(dir + 'constructed_data/spec_fg/' + str(0) + '.csv')
-      if (check.shape[0] != 426) or (check.shape[1] != 100):
-          break
+      #check = np.loadtxt(dir + 'constructed_data/spec_fg/' + str(0) + '.csv')
+      #if (check.shape[0] != 426) or (check.shape[1] != 100):
+         # break
 
       # save spectrograms
-      np.savetxt(dir + 'constructed_data/spec_bg/' + str(i) + '.csv', specs_bg[:, 0:100], fmt='%1.3e')
+      np.savetxt(foldername + '/spec_bg/' + str(i) + '.csv', specs_bg[:, 0:100], fmt='%1.3e')
       # check spectrogram
-      check = np.loadtxt(dir + 'constructed_data/spec_bg/' + str(0) + '.csv')
-      if (check.shape[0] != 426) or (check.shape[1] != 100):
-          break
+      #check = np.loadtxt(dir + 'constructed_data/spec_bg/' + str(0) + '.csv')
+      #if (check.shape[0] != 426) or (check.shape[1] != 100):
+          #break
 
-      np.savetxt(dir + 'constructed_data/spec_mix/' + str(i) + '.csv', specs_mix[:, 0:100], fmt='%1.3e')
+      np.savetxt(foldername + '/spec_mix/' + str(i) + '.csv', specs_mix[:, 0:100], fmt='%1.3e')
       # check spectrogram
-      check = np.loadtxt(dir + 'constructed_data/spec_mix/' + str(0) + '.csv')
-      if (check.shape[0] != 426) or (check.shape[1] != 100):
-          break
+      #check = np.loadtxt(dir + 'constructed_data/spec_mix/' + str(0) + '.csv')
+      #if (check.shape[0] != 426) or (check.shape[1] != 100):
+          #break
 
       if (np.mod(i, 100) == 0):
           plt.figure()
@@ -294,9 +300,8 @@ def save_spectrograms(numsamples, foldername="synthetic_data_v2_0"):
           plt.ylabel('Frequency')
           plt.title('Spectrogram of Mix (Sum) (i = ' + str(i) + ')')
           plt.colorbar()
-          plt.savefig(dir + 'constructed_data/pngs/' + str(i) + '.png')
+          plt.savefig(foldername + '/pngs/' + str(i) + '.png')
           plt.clf()
-"""
 
 
 def main():
@@ -306,12 +311,12 @@ def main():
   # change the numsamples parameter to change the number of triples of .wav files that are saved
   #produce_samples_v1(freqrange=[10000,15000],fileprefix="samplesv1_", numsamples=1, length=5, timerange=[0., 5.], countrange=[8,12], noiselevel=0.6, amplitude=2.5) # this was an arbitrary frequency range that might sound like bird chirps, feel free to tinker
   #write_single_advanced_chirp("advanced_chirp1.wav")
-  tripletlist = produce_samples_v2(freqrange=[5000,10000],fileprefix="./testfolder1/", numsamples=3, length=5, timerange=[0., 5.], countrange=[8,12], noiselevel=0.6, amplitude=2.5)
+  #tripletlist = produce_samples_v2(freqrange=[5000,10000],fileprefix="./testfolder1/", numsamples=3, length=5, timerange=[0., 5.], countrange=[8,12], noiselevel=0.6, amplitude=2.5)
   # i.e. run makeSpectrogram on the first lone bird sound
   #spectogramoutput = makeSpectrogram(tripletlist[0][0])
   # print out the spectrograms, which are freshly computed using makeSpectrogram (I graph the last part of the triplet spit out from makeSpectrogram)
   #showspectrograms(tripletlist[0])
-
-  #save_spectrograms(numsamples=10, foldername="synthetic_v2")
+  # took 20 minutes to do this
+  save_spectrograms(numsamples=1000, foldername="synthetic_data_v2_0")
 if __name__ == "__main__":
   main()
