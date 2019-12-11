@@ -17,6 +17,7 @@ import numpy as np
 from scipy.io import wavfile
 from scipy.signal import chirp, spectrogram
 from matplotlib import pyplot as plt
+import os
 
 #SAMPLERATE = 100000 # this was originally set to 44100; maybe tweaking this will get better results with higher frequency? It's a performance tradeoff
 SAMPLERATE = 44100 # this is the standard
@@ -127,12 +128,19 @@ def create_advanced_chirp_array(freqrange=[C4FREQ, C4FREQ], timerange=[0., 3.], 
   return accumulator
 
 def produce_samples_v2(freqrange=[C4FREQ, C4FREQ],
-  countrange=[3,5], lengthrange=[0.1, 0.2], noiselevel=0.05, length=3., timerange=[0., 3.], amplitude=1., fileprefix="samplesv2/", numsamples=5):
+  countrange=[3,5], lengthrange=[0.1, 0.2], noiselevel=0.05, length=3., timerange=[0., 3.], amplitude=1., fileprefix="./samplesv2", numsamples=5):
   # freqrange, timerange, countrange, and lengthrange are all from create_advanced_chirp_array, check that function for what these parameters do
   # length and amplitude are hopefully self explanitory (time in seconds, and something proportional to amplitude)
   # noiselevel is a number in [0.,1.], it represents how much to bias the noise when it comes to adding the sounds
   # numsamples is how many samples, file_prefix is the prefix for the files that you save these with
 
+  try:
+    os.mkdir(fileprefix)
+    os.mkdir(fileprefix+"/audio_fg")
+    os.mkdir(fileprefix+"/audio_bg")
+    os.mkdir(fileprefix+"/audio_mix")
+  except:
+    pass
   # produce_samples_v2 now returns a list of these [y_chirp, y_random, y_chirp + y_random] values, so that you can make spectrograms (for instance)
   returnarray = []
   t = np.linspace(0, int(length), int(SAMPLERATE * length))
@@ -236,22 +244,19 @@ def quick_asserts():
 def save_spectrograms(numsamples, foldername="testfolder1", dir="./"):
   # this code comes from Irina
   foldername = dir + foldername
+  # create tracks, and save to wav files in the process
   tripletlist = produce_samples_v2(freqrange=[5000,10000],fileprefix=foldername, numsamples=numsamples, length=5, timerange=[0., 5.], countrange=[8,12], noiselevel=0.6, amplitude=2.5)
-
+  # make the directories
+  try:
+    os.mkdir(foldername + "/spec_fg")
+    os.mkdir(foldername + "/spec_bg")
+    os.mkdir(foldername + "/spec_mix")
+    os.mkdir(foldername + "/pngs")
+  except:
+    pass
   # for each subtrack...
   for i, triplet in enumerate(tripletlist):
       print('Writing subtrack and spectrograms to file: ' + str(i))
-
-      fg_track = triplet[0]
-      bg_track = triplet[1]
-      mix_track = triplet[2]
-
-      # save wav files to files
-      # TODO: just do this in your function
-      #wavfile.write(dir + foldername + '/audio_fg/' + str(i) + '.wav', sampling_rate, all_bird_subtracks[i])
-      #wavfile.write(dir + foldername + '/audio_bg/' + str(i) + '.wav', sampling_rate, all_bg_subtracks[i])
-      #wavfile.write(dir + foldername + '/audio_mix/' + str(i) + '.wav', sampling_rate, all_total_subtracks[i])
-
       # create spectrograms
       [t_fg, freqs_fg, specs_fg] = makeSpectrogram(triplet[0], SAMPLERATE)
       [t_bg, freqs_bg, specs_bg] = makeSpectrogram(triplet[1], SAMPLERATE)
@@ -259,25 +264,11 @@ def save_spectrograms(numsamples, foldername="testfolder1", dir="./"):
 
       # save spectrograms
       np.savetxt(foldername + '/spec_fg/' + str(i) + '.csv', specs_fg[:, 0:100], fmt='%1.3e')
-      # check spectrogram
-      #check = np.loadtxt(dir + 'constructed_data/spec_fg/' + str(0) + '.csv')
-      #if (check.shape[0] != 426) or (check.shape[1] != 100):
-         # break
-
-      # save spectrograms
       np.savetxt(foldername + '/spec_bg/' + str(i) + '.csv', specs_bg[:, 0:100], fmt='%1.3e')
-      # check spectrogram
-      #check = np.loadtxt(dir + 'constructed_data/spec_bg/' + str(0) + '.csv')
-      #if (check.shape[0] != 426) or (check.shape[1] != 100):
-          #break
-
       np.savetxt(foldername + '/spec_mix/' + str(i) + '.csv', specs_mix[:, 0:100], fmt='%1.3e')
-      # check spectrogram
-      #check = np.loadtxt(dir + 'constructed_data/spec_mix/' + str(0) + '.csv')
-      #if (check.shape[0] != 426) or (check.shape[1] != 100):
-          #break
 
       if (np.mod(i, 100) == 0):
+          # create an image that we can view later
           plt.figure()
           plt.subplot(3, 1, 1)
           plt.imshow(np.transpose(specs_fg[:, 0:100]), aspect='auto')
@@ -317,6 +308,6 @@ def main():
   # print out the spectrograms, which are freshly computed using makeSpectrogram (I graph the last part of the triplet spit out from makeSpectrogram)
   #showspectrograms(tripletlist[0])
   # took 20 minutes to do this
-  save_spectrograms(numsamples=1000, foldername="synthetic_data_v2_0")
+  save_spectrograms(numsamples=1000, foldername="testfolder5")
 if __name__ == "__main__":
   main()
