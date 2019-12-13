@@ -191,7 +191,8 @@ def makeSpectrogram(s, framerate=SAMPLERATE):
         spec_imag[i, :] = fw.imag[0:np.int(n/2)]
         spec_real[i, :] = fw.real[0:np.int(n/2)]
 
-    spec_abs = spec_abs / np.max(spec_abs)
+    # should this be toggled on or off? unclear?
+    # spec_abs = spec_abs / np.max(spec_abs)
     return [t, freqs, spec_abs]
 
 def showspectrograms(amplists):
@@ -251,7 +252,10 @@ def save_spectrograms(numsamples, foldername="testfolder1", dir="./"):
     os.mkdir(foldername + "/spec_fg")
     os.mkdir(foldername + "/spec_bg")
     os.mkdir(foldername + "/spec_mix")
-    os.mkdir(foldername + "/pngs")
+    #os.mkdir(foldername + "/pngs")
+    os.mkdir(foldername + "/pngs_fg")
+    os.mkdir(foldername + "/pngs_bg")
+    os.mkdir(foldername + "/pngs_mix")
   except:
     pass
   # for each subtrack...
@@ -267,6 +271,51 @@ def save_spectrograms(numsamples, foldername="testfolder1", dir="./"):
       np.savetxt(foldername + '/spec_bg/' + str(i) + '.csv', specs_bg[:, 0:100], fmt='%1.3e')
       np.savetxt(foldername + '/spec_mix/' + str(i) + '.csv', specs_mix[:, 0:100], fmt='%1.3e')
 
+      # save spectrogram pngs
+      #fg
+      plt.figure()
+      # to remove whitespace
+      plt.gca().set_axis_off()
+      plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
+      plt.margins(0,0)
+      plt.gca().xaxis.set_major_locator(plt.NullLocator())
+      plt.gca().yaxis.set_major_locator(plt.NullLocator())
+      # and then the actual image
+      plt.imshow(np.transpose(specs_fg[:, 0:100]), aspect='auto')
+      plt.gca().invert_yaxis()
+      plt.savefig(foldername + '/pngs_fg/' + str(i) + '.png')
+      plt.close()
+
+      #bg
+      plt.figure()
+      # to remove whitespace
+      plt.gca().set_axis_off()
+      plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
+      plt.margins(0,0)
+      plt.gca().xaxis.set_major_locator(plt.NullLocator())
+      plt.gca().yaxis.set_major_locator(plt.NullLocator())
+      # and then the actual image
+      plt.imshow(np.transpose(specs_bg[:, 0:100]), aspect='auto')
+      plt.gca().invert_yaxis()
+      plt.savefig(foldername + '/pngs_bg/' + str(i) + '.png')
+      plt.close()
+
+      #mix
+      plt.figure()
+      # to remove whitespace
+      plt.gca().set_axis_off()
+      plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
+      plt.margins(0,0)
+      plt.gca().xaxis.set_major_locator(plt.NullLocator())
+      plt.gca().yaxis.set_major_locator(plt.NullLocator())
+      # and then the actual image
+      plt.imshow(np.transpose(specs_mix[:, 0:100]), aspect='auto')
+      plt.gca().invert_yaxis()
+      plt.savefig(foldername + '/pngs_mix/' + str(i) + '.png')
+      plt.close()
+
+
+      """
       if (np.mod(i, 100) == 0):
           # create an image that we can view later
           plt.figure()
@@ -293,6 +342,7 @@ def save_spectrograms(numsamples, foldername="testfolder1", dir="./"):
           plt.colorbar()
           plt.savefig(foldername + '/pngs/' + str(i) + '.png')
           plt.clf()
+      """
 
 
 def main():
@@ -308,6 +358,7 @@ def main():
   # print out the spectrograms, which are freshly computed using makeSpectrogram (I graph the last part of the triplet spit out from makeSpectrogram)
   #showspectrograms(tripletlist[0])
   # took 20 minutes to do this
-  save_spectrograms(numsamples=1000, foldername="testfolder5")
+  print("spectrograms are not normalized, and pngs are saved")
+  save_spectrograms(numsamples=1000, foldername="synthetic_data_v2_1")
 if __name__ == "__main__":
   main()
