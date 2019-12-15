@@ -19,7 +19,6 @@ from scipy.signal import chirp, spectrogram
 from matplotlib import pyplot as plt
 import os
 
-#SAMPLERATE = 100000 # this was originally set to 44100; maybe tweaking this will get better results with higher frequency? It's a performance tradeoff
 SAMPLERATE = 44100 # this is the standard
 C4FREQ = 261.63 # 261.63 Frequency should be C4 on the Piano
 
@@ -192,7 +191,7 @@ def makeSpectrogram(s, framerate=SAMPLERATE):
         spec_real[i, :] = fw.real[0:np.int(n/2)]
 
     # should this be toggled on or off? unclear?
-    # spec_abs = spec_abs / np.max(spec_abs)
+    spec_abs = spec_abs / np.max(spec_abs)
     return [t, freqs, spec_abs]
 
 def showspectrograms(amplists):
@@ -241,21 +240,21 @@ def quick_asserts():
   assert((normalize_data(np.array([7.2, 7.2, 7.2, 7.2])) == np.array([0.0, 0.0, 0.0, 0.0])).all())
   print("All asserts passed successfully!")
 
-
 def save_spectrograms(numsamples, foldername="testfolder1", dir="./"):
   # this code comes from Irina
   foldername = dir + foldername
   # create tracks, and save to wav files in the process
-  tripletlist = produce_samples_v2(freqrange=[5000,10000],fileprefix=foldername, numsamples=numsamples, length=5, timerange=[0., 5.], countrange=[8,12], noiselevel=0.6, amplitude=2.5)
+  #tripletlist = produce_samples_v2(freqrange=[5000,10000],fileprefix=foldername, numsamples=numsamples, length=5, timerange=[0., 5.], countrange=[8,12], noiselevel=0.6, amplitude=2.5)
+  tripletlist = produce_samples_v2(freqrange=[5000,10000],fileprefix=foldername, numsamples=numsamples, length=1, timerange=[0., 1.], countrange=[2,5], noiselevel=0.6, amplitude=2.5)
   # make the directories
   try:
     os.mkdir(foldername + "/spec_fg")
     os.mkdir(foldername + "/spec_bg")
     os.mkdir(foldername + "/spec_mix")
-    #os.mkdir(foldername + "/pngs")
-    os.mkdir(foldername + "/pngs_fg")
-    os.mkdir(foldername + "/pngs_bg")
-    os.mkdir(foldername + "/pngs_mix")
+    os.mkdir(foldername + "/pngs")
+    #os.mkdir(foldername + "/pngs_fg")
+    #os.mkdir(foldername + "/pngs_bg")
+    #os.mkdir(foldername + "/pngs_mix")
   except:
     pass
   # for each subtrack...
@@ -271,7 +270,8 @@ def save_spectrograms(numsamples, foldername="testfolder1", dir="./"):
       np.savetxt(foldername + '/spec_bg/' + str(i) + '.csv', specs_bg[:, 0:100], fmt='%1.3e')
       np.savetxt(foldername + '/spec_mix/' + str(i) + '.csv', specs_mix[:, 0:100], fmt='%1.3e')
 
-      # save spectrogram pngs
+      """
+      # save spectrogram pngs as images to use for training
       #fg
       plt.figure()
       # to remove whitespace
@@ -313,9 +313,8 @@ def save_spectrograms(numsamples, foldername="testfolder1", dir="./"):
       plt.gca().invert_yaxis()
       plt.savefig(foldername + '/pngs_mix/' + str(i) + '.png')
       plt.close()
-
-
       """
+
       if (np.mod(i, 100) == 0):
           # create an image that we can view later
           plt.figure()
@@ -342,23 +341,10 @@ def save_spectrograms(numsamples, foldername="testfolder1", dir="./"):
           plt.colorbar()
           plt.savefig(foldername + '/pngs/' + str(i) + '.png')
           plt.clf()
-      """
-
 
 def main():
-  # func_to_file will convert a function into a sound, saving it as a .wav file
-  #func_to_file(func=naive_sine_func, filename="singleCtone.wav")
   print("Feel free to change the parameters, or ask Tyler if you're confused about how to construct a certain data set")
-  # change the numsamples parameter to change the number of triples of .wav files that are saved
-  #produce_samples_v1(freqrange=[10000,15000],fileprefix="samplesv1_", numsamples=1, length=5, timerange=[0., 5.], countrange=[8,12], noiselevel=0.6, amplitude=2.5) # this was an arbitrary frequency range that might sound like bird chirps, feel free to tinker
-  #write_single_advanced_chirp("advanced_chirp1.wav")
-  #tripletlist = produce_samples_v2(freqrange=[5000,10000],fileprefix="./testfolder1/", numsamples=3, length=5, timerange=[0., 5.], countrange=[8,12], noiselevel=0.6, amplitude=2.5)
-  # i.e. run makeSpectrogram on the first lone bird sound
-  #spectogramoutput = makeSpectrogram(tripletlist[0][0])
-  # print out the spectrograms, which are freshly computed using makeSpectrogram (I graph the last part of the triplet spit out from makeSpectrogram)
-  #showspectrograms(tripletlist[0])
-  # took 20 minutes to do this
   print("spectrograms are not normalized, and pngs are saved")
-  save_spectrograms(numsamples=1000, foldername="synthetic_data_v2_1")
+  save_spectrograms(numsamples=10*1000, foldername="synthetic_data_v2_2")
 if __name__ == "__main__":
   main()
