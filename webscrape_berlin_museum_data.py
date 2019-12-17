@@ -28,8 +28,8 @@ numlinks = len(atags) - 6
 
 print('Beginning data download!')
 
-# download the first 20 recordings (to download all, change '20' to 'numlinks'
-for i in range(20):
+# download recordings
+for i in range(1604, numlinks):
     tag = atags[i + 6]
     download_url = 'https://www.tierstimmenarchiv.de/RefSys/_TsaRefData/MP3s/' + tag['href']
     urllib.request.urlretrieve(download_url, local_folder + tag['href'])
